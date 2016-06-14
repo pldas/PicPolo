@@ -1,0 +1,178 @@
+<?php
+//start php session to store information
+if (session_id() === '')
+    session_start();
+
+// session variable to track current page
+$_SESSION['ACTIVE_PAGE'] = "detial";
+
+$SIGNED_IN = isset($_SESSION['username']);
+// restore username to display welcome message
+if (isset($_SESSION['username']))
+    $current_user = $_SESSION["username"];
+
+// signout
+if (isset($_SESSION['username']) && isset($_GET['signout'])) {
+    // remove all session variables
+    session_unset();
+    // destroy the session 
+    session_destroy();
+    header('Location:' . $_COOKIE['CURRENT_PAGE']);
+} else {
+    // save current page url to cookie for redirection during sign in or sign out.
+    setcookie('CURRENT_PAGE', $_SERVER['REQUEST_URI']);
+}
+
+//if (isset($_POST['imgId']))
+//  $imgId = $_POST['imgId'];
+//else
+//   $imgId = "1000";
+?>
+
+<!DOCTYPE html>
+
+<html>
+
+    <script type="text/javascript">
+        var signedIn = "<?php echo $SIGNED_IN; ?>";
+    </script>    
+    <head>
+        <title>Detail</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- Custom JavaScript -->
+        <script src="js/search.js" type="text/javascript"></script>
+        <!-- JQuery 1.12.0 -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+        <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.12.0.min.js"></script>
+
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+        <!-- JQuery UI -->
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+        <!-- Custom CSS -->
+        <link type="text/css" href="css/1-col-portfolio.css" rel="stylesheet">
+        <link type="text/css" href="css/stylesheet.css" rel="stylesheet">
+    </head>
+
+    <body>
+
+        <!-- include header file -->
+        <?php
+        include 'includes/header.php';
+        //include 'db/dbHandler.php';
+        $dbHamdeler = new dbHandler();
+        $imgId = $_GET['q'];
+        ?>
+
+        <div class="container">
+            <?php
+            $imgName = $dbHamdeler->getImageName($imgId);
+            $tmpArray = json_decode($dbHamdeler->getImageInfo($imgId), TRUE);
+            $imgInfo = $tmpArray[0];
+            $source = "assets/images/" . $imgName['imgId'] . "-" . $imgInfo['imageSize'][1]['sizeId'] . "." . $imgName['imgType'];
+            ?>
+            <h2 style="margin-top: -80px "> Detail Page: <?php echo $imgName['imgTitle']; ?><br><br></h2>
+            <div class="row">
+
+                <div class="col-sm-6">
+                    <img src="<?php echo $source ?>" class="img-responsive" >
+                </div>
+
+                <div class="col-sm-5">
+                    <div class="row">
+                        <?php
+                        echo '<h4><strong>Image Name: </strong>' . $imgInfo['imageTitle'] . '</h4><br>'
+                        . '<h4><strong>Artist Name: </strong>' . $imgInfo['artistName'] . '</h4><br>'
+                        . '<h4><strong>Category: </strong>' . $imgInfo['imageCategory'] . '</h4><br>'
+                        . '<h4><strong>Description: </strong>' . $imgInfo['imageDescription'] . '</h4><br>';
+                        ?>
+
+
+                    </div>
+
+                    <div class="row">
+                        <h4><br><strong>Size / Price / License:</strong></h4>
+                        <div class="col-sm-5">
+                            <br>
+                            <form action="" id="license-form" class="img-thumbnail"  data-toggle="tooltip" title="Standard: Regular resolution image.">
+                                <legend><center>Standard</center></legend>
+                                <?php
+                                $prices = $dbHamdeler->getImagePrices($imgId, "Standard");
+                                foreach ($prices as $row) {
+                                    echo '<h4><input type="radio" id="standard" name="standard" onclick="uncheck(this.name, this.value)" value="' .
+                                    $row['name'] . ' / ' . $row['price'] . '$">' . $row['name'] . ' / ' . $row['price'] . '$</h4>';
+                                }
+                                ?>
+                            </form>
+                        </div>
+                        <div class="col-sm-5">
+                            <br>
+                            <form action="" id="license-form" class="img-thumbnail" data-toggle="tooltip" title="Extended: High resolution image.">
+                                <legend><center>Extended</center></legend>
+                                <?php
+                                $prices = $dbHamdeler->getImagePrices($imgId, "Extended");
+                                foreach ($prices as $row) {
+                                    echo '<h4><input type="radio" id="extended" name="extended" onclick="uncheck(this.name, this.value)" value="' .
+                                    $row['name'] . ' / ' . $row['price'] . '$">' . $row['name'] . ' / ' . $row['price'] . '$</h4>';
+                                }
+                                ?>
+                            </form>
+                        </div>
+                        <div class="row">
+                            <?php
+                            echo '<div class="row-fluid pull-right">
+                                    <br>
+                                    <a id="buy-btn" class="buy-btn btn btn-primary btn-lg">Buy Now <span class="glyphicon glyphicon-chevron-right"></span></a>
+                                    </div>';
+                            ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    <script>
+
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+
+        function uncheck(lic, priceSize) {
+
+            if (lic === "standard") {
+                var radios = document.getElementsByName('extended');
+                for (var i = 0; i < radios.length; i++) {
+                    if (radios[i].checked)
+                        radios[i].checked = false;
+                }
+                
+            } else if (lic === "extended") {
+                var radios = document.getElementsByName('standard');
+                for (var i = 0; i < radios.length; i++) {
+                    if (radios[i].checked)
+                        radios[i].checked = false;
+                }
+            }
+        }
+
+   //     function getValue(value, lic) {
+     //       document.getElementById("result").value = value + lic;
+       // }
+
+    </script>
+    <?php include 'includes/footer.php'; ?>
+</body>
+</html>

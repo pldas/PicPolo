@@ -1,0 +1,350 @@
+/*
+    Custom css for PicPOLO
+*/
+/* 
+    Created on : Mar 28, 2016, 9:10:14 PM
+    Authors     : Team 2
+*/
+
+
+/* CUSTOMIZE THE CAROUSEL
+-------------------------------------------------- */
+
+/* Carousel base class */
+.carousel {
+    margin-bottom: 30px;
+    /*border-radius: 50px;*/
+    overflow: hidden;
+    max-height: 450px;
+}
+/* Since positioning the image, we need to help out the caption */
+.carousel-caption {
+    z-index: 10;
+    padding-top: 11%;
+    padding-left: -6%;
+}
+
+/* Declare heights because of positioning of img element */
+
+.carousel .item {
+    height: 500px;
+    background-color:#555;
+       
+}
+
+
+/* disable carousel on mobile */
+@media (max-width:800px) {
+    #myCarousel {
+        display:none !important;
+    }
+}
+
+#myCarousel {
+    border:1px solid black;
+    box-shadow: 2px 3px 4px rgba(0,0,0,0.3);
+}
+
+#purchase-carousel {
+    cursor: pointer;
+}
+
+#carousel-header {
+    font-style: normal;
+    font-size: 14pt;
+    font-family: sans-serif;
+    text-align: center;
+    color:#333333;
+/*    text-shadow: 1px 2px 2px rgba(0,0,0,0.3);*/
+}
+
+#caption-title {
+    font-style: normal;
+    margin-top:-40px;
+    font-size: 30pt;
+    font-family: Open Sans;
+    color:#ffffff;
+/*    text-shadow: 1px 2px 2px rgba(0,0,0,0.3);*/
+}
+
+.carousel-control.left, .carousel-control.right { 
+    background: none !important; 
+    filter: progid none !important;
+    color:black;
+}
+
+.carousel-caption {
+    top: 12px;
+    bottom: auto;
+    
+}
+
+.carousel-indicators li {
+    margin-bottom: -20px;
+    color: black;
+    border:1px solid black;
+    box-shadow: 1px 2px 2px rgba(0,0,0,0.3);
+}
+
+.carousel-indicators .active {
+    margin-bottom: -20px;
+    background-color: #349935;
+    box-shadow: 1px 2px 2px rgba(0,0,0,0.3);
+}
+
+.carousel-inner > .item {
+    text-align: center;
+     top: 0;
+   
+    height: 400px;
+}
+
+
+.carousel-inner > .item > img,
+.carousel-inner > .item > a > img {
+    width: 100%;
+    margin: auto;
+    float: none;
+    height: 400px;
+    max-width: none;
+    min-width: 100%;
+    top: 0;
+    left: 0;
+
+    position: absolute;
+   
+}
+
+#license-form {
+    border: 1px solid black;
+    box-shadow: 1px 2px 3px rgba(0,0,0,0.3)
+}
+
+.upload-header {
+    font-weight:bold;
+    font-size: 14pt;
+}
+
+hr.gray-div {
+    height: 1px;
+    color: #cccccc;
+    background-color: #cccccc;
+    border: none;
+}
+
+hr.search-div {
+    margin-left: -100px;
+    margin-top: -50px;
+}
+
+.div{
+    width: 100%;
+    height: 110px;
+    padding: 10px;
+    background: #ff5c33;
+    font-size: 40pt;
+    color: #ffffff;
+    /*border-radius: 10px;*/
+    margin: 0;
+    text-shadow: 1px 2px 2px rgba(0,0,0,0.3);
+}
+
+/* bootstrap overrides */
+body{
+    /*background: url('http://wallpapercave.com/wp/igxNOHD.jpg');*/
+    color: #349935;
+     /*color: #72e573*/
+}
+
+/* link font */
+.p {
+    font-size: 120%;
+    
+}
+.license{
+    font-size: 12pt;
+}
+
+/* currency input */
+.currencyinput {
+    border: 1px inset #ccc;
+}
+.currencyinput input {
+    border: 0;
+}
+
+/* navbar */
+.navbar {
+    background-color: #403e3e;
+}
+
+#nav-choice {
+    font-size: 12pt;
+    font-weight: bold !important;
+    color: #fff;
+    text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;
+}
+#nav-bar {
+    border-bottom: 1px solid black;
+}
+
+.navbar .active {
+    background-color: #349935;
+    border-bottom: 3px solid #00757F;
+}
+
+.navbar-nav > li > a {
+    color: #fff;
+}
+
+.navbar-nav > li > a:hover, .navbar-nav > li > a:focus, .navbar-nav > li > a:active {
+    background-color: #003366;
+    border-bottom: 3px solid #003366;
+}
+
+.navbar-toggle {
+    border-color: #fff;
+}
+
+.navbar-toggle > .icon-bar {
+    background-color: #fff;
+}
+
+.navbar-toggle:hover,
+.navbar-toggle:focus {
+  background-color: #349935;
+}
+
+form.navbar-form.navbar-left .form-group input.form-control{
+  background-color: #eee;
+  color: #bbb;
+  width: 610px;
+}
+
+form.navbar-form.navbar-left .form-group input.form-control:focus{
+  background-color: #fff;
+  color: #000;
+}
+/* end navbar */
+
+/* end bootstrap overrides */
+
+#body-content {
+    margin-bottom: 150px;
+}
+
+.close {
+    border: 1px solid #ccc !important;
+    border-radius: 5px !important;
+    padding: 10px !important;
+}
+
+.copyright {
+    color: #000000;
+}
+
+footer {
+    position: relative;
+    margin: 0;
+    text-align: center;
+}
+
+.input-group-stylish .input-group-addon{
+    background: white !important; 
+}
+
+.input-group-stylish .form-control{
+    border-right:0; 
+    border-left: 0;
+    box-shadow:0 0 0;
+    border-color:#ccc;
+}
+
+.input-group-stylish select{
+    border:0;
+    background: transparent !important;
+}
+
+.input-group-stylish button{
+    border:0;
+    background: transparent;
+}
+
+.modal-header-style {
+    color:#fff;
+    padding:9px 15px;
+    border-bottom:1px solid #eee;
+    background-color: #349935;
+    -webkit-border-top-left-radius: 5px;
+    -webkit-border-top-right-radius: 5px;
+     border-top-left-radius: 5px;
+     border-top-right-radius: 5px;
+    text-align: center;
+}
+
+.modal-content-block {
+    padding: 10px 50px 10px 50px;
+}
+
+.modal-content-block:first-child {
+    padding-bottom: 50px;
+}
+
+.placeholder a {
+    text-decoration: none;
+    color: #000000;
+}
+
+.well {
+    background: #f2f2f2;
+    box-shadow: 1px 2px 3px rgba(0,0,0,0.3);
+}
+
+.placeholder .well a:hover {
+    color: #349935;
+    text-decoration: none;
+}
+
+.placeholder .well:hover {
+    border: 2px solid #ccc;
+}
+
+input:focus {
+    outline: none !important;
+    border:2px solid #719ECE;
+    box-shadow: 0 0 10px #719ECE;
+}
+
+.push-bottom {
+    padding-bottom: 60px;
+}
+
+.push-top {
+    padding-top: 60px;
+}
+
+[class*="col-"]{
+    padding-bottom: 12px;
+}
+
+#search-box {
+    width: 65%;
+    margin-left: 16%;
+    padding-top: 200px;
+    padding-bottom: 200px;
+    border-radius: 50px;
+    background-image: url('../assets/style/icons/photo1.jpg');
+    background-size: 100% auto;
+}
+
+ul.nav li.dropdown:hover > ul.dropdown-menu {
+    transition-delay: 1s;
+    display: block;    
+}
+
+#terms {
+    font-size: 8pt;
+}
+
+/* upload */
+/* end upload */

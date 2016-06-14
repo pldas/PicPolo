@@ -1,0 +1,770 @@
+<?php
+
+/*
+ * To change  header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ * Description of dbHandler
+ *
+ * @author ivan
+ */
+class dbHandler {
+
+//put your code here
+    private $conn;
+    private $table = array(
+        'image' => 'image',
+        'user' => 'user',
+        'artist' => 'seller',
+        'size' => 'imageSize',
+        'category' => 'imageCat',
+        'license' => 'licType',
+        'seller' => 'seller',
+        'price' => 'imagePrice'
+    );
+
+    /**
+     * Constructor
+     * 
+     */
+    public function __construct() {
+        $conInfo = parse_ini_file("dbconfig.ini");
+        try {
+            // Create connection
+            $this->conn = new PDO("mysql:host=" . $conInfo['host'] . ";dbname=" . $conInfo["dbname"], $conInfo["username"], $conInfo["password"]);
+            return TRUE;
+        } catch (PDOException $e) {
+            // Check connection
+            echo "Connection failed: " . $conn->connect_error;
+            return FALSE;
+        }
+    }
+
+    /**
+     * Function is used to protect from sql injection
+     * @param String $input query term to that will convert to a term safe from sql injection
+     * @return String $safe_input the converted query term
+     */
+    private function injectProt($input) {
+        $safe_input = preg_replace('/[^\p{L}\p{N}\s]/u', '', $input);
+        return $safe_input;
+    }
+
+    /*     * *************************** Image Info Session ********************************** */
+
+    /**
+     * This function inserts newly created data for uploaded image into database if no errors occur
+     * 
+     * @param int $artistId
+     * @param string $title
+     * @param string $description
+     * @param int $status
+     * @param int $category
+     * @param string $type
+     */
+    public function insertImage($artistId, $title, $description, $category, $type) {
+        $query = "INSERT INTO " . $this->table['image'] . " (artistId, imgTitle, descrip, catId, imgType) VALUE('$artistId', '$title', '$description', '$category', '$type')";
+
+        try {
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conn->exec($query);
+            echo "<script>alert(Thank You for Your Submission. \nYou have successfully submitted your artwork</script>";
+            return TRUE;
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+            return FALSE;
+        }
+
+    }
+
+    public function insertPrice($imageId, $sizeId, $licenseId, $price) {
+        $query = "INSERT INTO " . $this->table['price'] . " (imgId, sizeId, licId, price) VALUE('$imageId', '$sizeId', '$licenseId', '$price')";
+
+        try {
+            $this->conn->exec($query);
+            return TRUE;
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+            return FALSE;
+        }
+    }
+
+    public function getNewImageId() {
+        $query = 'SHOW TABLE STATUS LIKE "' . $this->table['image'] . '";';
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['Auto_increment'];
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+    
+    public function getSizes() {
+        $query = "SELECT * FROM " . $this->table['size'] . ";";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            $result;
+            if($count > 0) {
+                $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+            return $result;
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+    
+    public function getLicenses() {
+        $query = "SELECT * FROM " . $this->table['license'] . ";";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $result;
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+    
+    public function getFilterList($keyword, $artist, $category) {
+        $keyword = strtolower($keyword);
+        $query = "SELECT SQL_CALC_FOUND_ROWS I.*, A.userId, A.pseudonym FROM "
+                . $this->table['image'] . " I INNER JOIN " . $this->table['artist']
+                . " A ON I.artistId=A.userId WHERE I.status <> 0 AND (LOWER(I.imgTitle) LIKE \"%" . $keyword
+                . "%\" OR LOWER(I.descrip) LIKE \"%" . $keyword . "%\" OR LOWER(A.pseudonym) LIKE \"%" . $keyword . "%\")";
+
+        if (!empty($artist)) {
+            foreach ($artist as $art) {
+                $artArray[] = ' LOWER(userId) LIKE "%' . strtolower($art) . '%" ';
+            }
+            $query .= ' AND (' . implode(" OR ", $artArray) . ')';
+        }
+
+        if (!empty($category)) {
+            foreach ($category as $cat) {
+                $catArray[] = ' catId LIKE "' . strtolower($cat) . '" ';
+            }
+            $query .= ' AND (' . implode(" OR ", $catArray) . ')';
+        }
+
+        $query .= " ORDER BY CASE "
+                . "WHEN (LOWER(I.imgTitle) LIKE \"" . $keyword . "%\" OR LOWER(I.descrip) LIKE \""
+                . $keyword . "%\" OR LOWER(A.pseudonym) LIKE \"" . $keyword . "%\") THEN 1 "
+                . "WHEN (LOWER(I.imgTitle) LIKE \"%" . $keyword . "\" OR LOWER(I.descrip) LIKE \"%"
+                . $keyword . "\" OR LOWER(A.pseudonym) LIKE \"%" . $keyword . "\") THEN 3 "
+                . "ELSE 2 END;";
+        
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $stmt->setFetchMode(PDO::FETCH_ASSOC);
+            $results;
+            if ($stmt->rowCount() > 0) {
+                foreach($stmt->fetchAll() as $row) {
+                    $category = $this->getCategory($row['catId']);
+                    $size = $this->getSizes();
+                    $license = $this->getLicenses();
+                    $results[] = array(
+                        'artistId' => $row['artistId'],
+                        'artistName' => $row['pseudonym'],
+                        'imageCategory' => $category,
+                        'imageSize' => $size,
+                        'listingStatus' => $row['status'],
+                        'visitCount' => $row['numVisit'],
+                        'imageType' => $row['imgType']
+                    ); 
+                }
+                return json_encode($results);
+            } else {
+                return;
+            }
+        } catch (Exception $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+            return;
+        }
+    }
+    
+    public function getImageList($keyword, $artist, $category, $sort, $page) {
+        $keyword = strtolower($keyword);
+        $resultPerPage = 10;
+        $rowOffset = $page * $resultPerPage - $resultPerPage;
+        $query = "SELECT SQL_CALC_FOUND_ROWS I.*, A.userId, A.pseudonym FROM "
+                . $this->table['image'] . " I INNER JOIN " . $this->table['artist']
+                . " A ON I.artistId=A.userId WHERE I.status <> 0 AND (LOWER(I.imgTitle) LIKE \"%" . $keyword
+                . "%\" OR LOWER(I.descrip) LIKE \"%" . $keyword . "%\" OR LOWER(A.pseudonym) LIKE \"%" . $keyword . "%\")";
+
+        if (!empty($artist)) {
+            foreach ($artist as $art) {
+                $artArray[] = ' LOWER(userId) LIKE "%' . strtolower($art) . '%" ';
+            }
+            $query .= ' AND (' . implode(" OR ", $artArray) . ')';
+        }
+
+        if (!empty($category)) {
+            foreach ($category as $cat) {
+                $catArray[] = ' catId LIKE "' . strtolower($cat) . '" ';
+            }
+            $query .= ' AND (' . implode(" OR ", $catArray) . ')';
+        }
+
+        $query .= " ORDER BY CASE "
+                . "WHEN (LOWER(I.imgTitle) LIKE \"" . $keyword . "%\" OR LOWER(I.descrip) LIKE \""
+                . $keyword . "%\" OR LOWER(A.pseudonym) LIKE \"" . $keyword . "%\") THEN 1 "
+                . "WHEN (LOWER(I.imgTitle) LIKE \"%" . $keyword . "\" OR LOWER(I.descrip) LIKE \"%"
+                . $keyword . "\" OR LOWER(A.pseudonym) LIKE \"%" . $keyword . "\") THEN 3 "
+                . "ELSE 2 END LIMIT $rowOffset, $resultPerPage;";
+        
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $stmt->setFetchMode(PDO::FETCH_ASSOC);
+            $results[] = $this->conn->query('SELECT FOUND_ROWS();')->fetch(PDO::FETCH_COLUMN);
+            if ($stmt->rowCount() > 0) {
+                foreach($stmt->fetchAll() as $row) {
+                    $size = $this->getSizes();
+                    $results[] = array(
+                        'imageId' => $row['imgId'],
+                        'artistName' => $row['pseudonym'],
+                        'imageTitle' => $row['imgTitle'],
+                        'imageDescription' => $row['descrip'],
+                        'imageSize' => $size,
+                        'listingStatus' => $row['status'],
+                        'imageType' => $row['imgType']
+                    ); 
+                    
+                }
+                return json_encode($results);
+            } else {
+                return;
+            }
+        } catch (Exception $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+            return;
+        }
+    }
+
+    /**
+     * prints all info about the pictur
+     * 
+     * @param int imgId
+     */
+    public function getImageInfo($imgId) {
+
+        $query = "SELECT * FROM " . $this->table['image'] . " I INNER JOIN " . $this->table['artist']
+                . " A ON I.artistId=A.userId WHERE  I.status <> 0 AND  I.imgId = '$imgId';";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $results;
+            if ($stmt->rowCount() > 0) {
+                foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                    $category = $this->getCategory($row['catId']);
+                    $size = $this->getSizes();
+                    $license = $this->getLicenses();
+                    
+                    $results[] = array(
+                        'imageId' => $row['imgId'],
+                        'artistId' => $row['artistId'],
+                        'artistName' => $row['pseudonym'],
+                        'imageTitle' => $row['imgTitle'],
+                        'imageDescription' => $row['descrip'],
+                        'imageCategory' => $category['name'],
+                        'imageLicense' => $license,
+                        'imageSize' => $size,
+                        'visitCount' => $row['numVisit'],
+                        'listingStatus' => $row['status'],
+                        'imageType' => $row['imgType']
+                    );
+                }
+                return json_encode($results);
+            } else {
+                return;
+            }
+        } catch (Exception $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+            return;
+        }
+    }
+
+    /**
+     * returns name.typ of the image
+     * 
+     * @param int imgId
+     * @return String returns name.typ
+     */
+    public function getImageName($imgId) {
+
+        $query = "SELECT imgId, imgTitle, imgType FROM " . $this->table['image'] . " WHERE imgId =  '$imgId';";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            if ($count > 0) {
+
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                return $row;
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+
+    /**
+     * returns all prices for an image
+     * 
+     * @param int imgId
+     * @return image price
+     */
+    public function getImagePrices($imgId, $lic) {
+        $query = "SELECT S.name, P.price FROM " . $this->table['price'] . " P, " . $this->table['license'] . " L, imageSize S " .
+                "WHERE P.imgId =  '$imgId' AND P.licId = L.licId AND P.sizeId = S.sizeId AND L.name = '$lic';";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            if ($count > 0) {
+                $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                return $result;
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+
+    public function getLicenseType($licenseId) {
+
+        $query = "SELECT * FROM " . $this->table['license'] . " WHERE licId = $licenseId;";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            if ($count > 0) {
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                return $row['name'];
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+
+    public function getCategory($categoryId) {
+
+        $query = "SELECT * FROM " . $this->table['category'];
+        if(isset($categoryId)){
+                $query .=" WHERE catId = $categoryId";
+        }
+        $query .= " ORDER BY name;";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            if ($count > 1) {
+                $result;
+                while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+                    $result[] = $row;
+                }
+                return $result;
+            } else if ($count > 0) {
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                return $result;
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+
+    /**
+     * returns image type name
+     * 
+     * @param int sizeId
+     * @return String name
+     */
+    public function getSizeType($sizeId) {
+
+        $query = "SELECT * FROM " . $this->table['size'] . " WHERE sizeId = $sizeId;";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            if ($count > 0) {
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                return $row['name'];
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+
+    /**
+     * Runing search query to artist column of the image table in the database.
+     * 
+     * @param String $keyword
+     */
+    public function getArtist($artist = NULL) {
+
+        $query = "SELECT * FROM " . $this->table['artist'];
+
+        if (isset($artist)) {
+            $query .= " WHERE usrId = $artist";
+        }
+        $query .= " ORDER BY pseudonym ASC;";
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            $result;
+            if ($count > 0) {
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $result[] = array(
+                        'artistId' => $row['userId'],
+                        'artistName' => $row['pseudonym'],
+                        'bio' => $row['bio']
+                    );
+                }
+                return json_encode($result);
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+
+    /*     * ******************** End of Image Info Session ********************************** */
+
+
+    /*     * **************************** User Info Session ********************************** */
+
+    /**
+     * Searchs db to find data that contains entered username and password
+     * 
+     * @param String $username
+     * @param String $password
+     * @return boolean returns true if account exist and false if not
+     */
+    public function findLogin($username, $password) {
+        $query = "SELECT UserID FROM " . $this->table['user'] . " WHERE Username =  '$username' AND Password = '$password';";
+        $result = $this->conn->query($query);
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            if ($count === 1) {
+                //$this->conn = NULL;
+                return true;
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+            return false;
+        }
+        //$this->conn = NULL;
+        return false;
+    }
+
+    /**
+     * Checks to see if entered username exists in database
+     * 
+     * @param String $username
+     * @return boolean returns true if username exists and false if it doesn't
+     */
+    public function findUser($username) {
+        $query = "SELECT Username FROM " . $this->table['user'] . " WHERE Username =  '$username';";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            if ($count > 0) {
+                //$this->conn = NULL;
+                return true;
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+            return false;
+        }
+        //$this->conn = NULL;
+        return false;
+    }
+
+    /**
+     * Checks to see if entered username exists in database
+     * 
+     * @param String $username
+     * @return boolean returns UserID
+     */
+    public function displayUserProfile($username) {
+        $query = "SELECT * FROM " . $this->table['user'] . " WHERE Username =  '$username';";
+        $result = $this->conn->query($query);
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            if ($count > 0) {
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                /* echo '<h2>' . $row['FirstName'] . ' ' . $row['LastName'] . '</h2><br>'
+                 * . '<p><strong>Username: </strong>' . $row['Username'] . '</p>'
+                  . '<p><strong>Email: </strong>' . $row['Email'] . '</p>'
+                  . '<p><strong>Phone: </strong>' . $row['Phone'] . '</p>'; */
+                echo '<h2>Welcome ' . $row['FirstName'] . '</h2><br>'
+                . '<table class="table table-hover">'
+                . '<thead>'
+                . '<tr>'
+                . '<th>Account Settings</th>'
+                . '<th></th>'
+                . '<th></th>'
+                . '</tr>'
+                . '</thead>'
+                . '<tbody>'
+                . '<tr>'
+                . '<td>Name</td>'
+                . '<td>' . $row['FirstName'] . ' ' . $row['LastName'] . '</td>'
+                . '<td><a href="#" data-toggle="modal" data-target="#editName" data-backdrop="static" data-keyboard="false"><span class="glyphicon glyphicon-pencil"></span> Edit</a></td>'
+                . '</tr>'
+                . '<tr>'
+                . '<td>Username</td>'
+                . '<td>' . $row['Username'] . '</td>'
+                . '<td><p style="color:gray"><span class="glyphicon glyphicon-lock"></span> Locked</p></td>'
+                . '</tr>'
+                . '<tr>'
+                . '<td>Email</td>'
+                . '<td>' . $row['Email'] . '</td>'
+                . '<td><a href="#" data-toggle="modal" data-target="#editEmail" data-backdrop="static" data-keyboard="false"><span class="glyphicon glyphicon-pencil"></span> Edit</a></td>'
+                . '</tr>'
+                . '<tr>'
+                . '<td>Password</td>'
+                . '<td>Change password</td>'
+                . '<td><a href="#" data-toggle="modal" data-target="#editPassword" data-backdrop="static" data-keyboard="false"><span class="glyphicon glyphicon-pencil"></span> Edit</a></td>'
+                . '</tr>'
+                . '<td>Phone</td>'
+                . '<td>(' . substr($row['Phone'],0,3) . ') ' . substr($row['Phone'],3,3) . '-' . substr($row['Phone'],6,4) . '</td>'
+                . '<td><a href="#" data-toggle="modal" data-target="#editPhone" data-backdrop="static" data-keyboard="false"><span class="glyphicon glyphicon-pencil"></span> Edit</a></td>'
+                . '</tr>'
+                . '</tbody>'
+                . '</table>';
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+            return false;
+        }
+        //$this->conn = NULL;
+        return false;
+    }
+    
+    /** This function gets the user's first name given the user's username
+     * 
+     */
+    public function getUserFirstName($username) {
+        $query = "SELECT * FROM " . $this->table['user'] . " WHERE Username =  '$username';";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            if ($count > 0) {
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                return $row['FirstName'];
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+            return false;
+        }
+        //$this->conn = NULL;
+        return false;
+    }
+    
+    public function getArtistId($username) {
+        $query = "SELECT UserID, Username FROM " . $this->table['user'] . " WHERE Username =  '$username';";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            if ($count > 0) {
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                return $row['UserID'];
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+            return false;
+        }
+        //$this->conn = NULL;
+        return false;
+    }
+    
+        /** This function gets the user's first name given the user's username
+    * 
+    */
+    public function getUserInitials($username) {
+        $query = "SELECT * FROM " . $this->table['user'] . " WHERE Username =  '$username';";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            if ($count > 0) {
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                $initials = strtoupper(substr($row['FirstName'], 0, 1) . substr($row['LastName'], 0, 1));
+                return $initials;
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+            return false;
+        }
+        //$this->conn = NULL;
+        return false;
+    }    
+    
+    /**
+     * This function inserts newly created data into database if no errors occur
+     * 
+     * @param String $username
+     * @param String $password
+     * @param String $firstname
+     * @param String $lastname
+     * @param String $email
+     */
+    public function createAccount($username, $password, $firstname, $lastname, $email) {
+        $query = "INSERT INTO " . $this->table['user'] . "(Username,Password,FirstName,LastName,Email) VALUES('$username','$password','$firstname','$lastname','$email')";
+
+        try {
+            $this->conn->exec($query);
+            $success = "Account has been successfully.\\nYou can now login.";
+            $auth = new authentication();
+            $auth->createSession($username);
+            ob_start();
+            if (session_id() === '')
+                session_start();
+            //echo "<script type='text/javascript'>location.href='index.php';</script>";
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+
+        //$this->conn = null;
+    }
+    
+      public function createSeller($userId, $pseudonym) {
+        $query = "INSERT INTO " . $this->table['seller'] . "(userId,pseudonym) VALUES('$userId','$pseudonym')";
+
+        try {
+            $this->conn->exec($query);
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+
+        //$this->conn = null;
+    }
+
+    /**
+     * This function inserts newly created user data into database if no errors occur
+     * 
+     * @param String $username
+     * @param String $password
+     * @param String $firstname
+     * @param String $lastname
+     * @param String $email
+     * @param String $phone
+     * @param String $usertype
+     */
+    public function insertUser($username, $password, $firstname, $lastname, $email, $phone, $usertype) {
+        $query = "INSERT INTO " . $this->table['user'] . " (Username, Password, FirstName, LastName, Email, Phone, UserType) VALUE('$username', '$password', '$firstname', '$lastname', '$email', '$phone', '$usertype')";
+
+        try {
+            $this->conn->exec($query);
+            $success = "Account has been created successfully.\\nYou can now login.";
+            $auth = new authentication();
+            $auth->createSession($username);
+            ob_start();
+            if (session_id() === '')
+                session_start();
+            echo "<script type='text/javascript'>location.href='index.php';</script>";
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+
+        $this->conn = null;
+    }
+
+    public function editFirstName($username, $newFirstName) {
+
+        $query = "UPDATE " . $this->table['user'] . " SET FirstName='$newFirstName' WHERE Username='$username'";
+        $result = $this->conn->query($query);
+        try {
+            $this->conn->exec($query);
+            echo "<meta http-equiv='refresh' content='0'>";
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+
+    public function editLastName($username, $newLastName) {
+
+        $query = "UPDATE " . $this->table['user'] . " SET LastName='$newLastName' WHERE Username='$username'";
+        $result = $this->conn->query($query);
+        try {
+            $this->conn->exec($query);
+            echo "<meta http-equiv='refresh' content='0'>";
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+
+        public function editEmail($username, $newEmail) {
+
+        $query = "UPDATE " . $this->table['user'] . " SET Email='$newEmail' WHERE Username='$username'";
+        $result = $this->conn->query($query);
+        try {
+            $this->conn->exec($query);
+            echo "<meta http-equiv='refresh' content='0'>";
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+    
+        public function editPhoneNumber($username, $newPhoneNumber) {
+
+        $query = "UPDATE " . $this->table['user'] . " SET Phone='$newPhoneNumber' WHERE Username='$username'";
+        $result = $this->conn->query($query);
+        try {
+            $this->conn->exec($query);
+            echo "<meta http-equiv='refresh' content='0'>";
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+    
+        public function getPassword($username) {
+        $query = "SELECT Password FROM " . $this->table['user'] . " WHERE Username =  '$username';";
+        try {
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+            if ($count > 0) {
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                return $row['Password'];
+            }
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+            return false;
+        }
+        //$this->conn = NULL;
+        return false;
+    }
+    
+            public function editPassword($username, $newPassword) {
+
+        $query = "UPDATE " . $this->table['user'] . " SET Password='$newPassword' WHERE Username='$username'";
+        $result = $this->conn->query($query);
+        try {
+            $this->conn->exec($query);
+            echo "Your Password has succuessfully updated";
+        } catch (PDOException $e) {
+            echo "Query failed:  " . $query . "<br>" . $e->getMessage();
+        }
+    }
+    
+    /*     * ********************* End of User Info Session ********************************** */
+}

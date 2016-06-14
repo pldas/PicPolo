@@ -1,0 +1,193 @@
+<?php
+//start php session to store information
+if (session_id() === '')
+    session_start();
+
+// session variable to track current page
+$_SESSION['ACTIVE_PAGE'] = "home";
+if (!isset($_COOKIE['HOME'])) {
+    setcookie('HOME', filter_input(INPUT_SERVER, 'REQUEST_URI'));
+}
+if (isset($_SESSION['username']))
+    $current_user = $_SESSION['username'];
+
+// signout
+if (isset($_SESSION['username']) && isset($_GET['signout'])) {
+    // remove all session variables
+    session_unset();
+    // destroy the session 
+    session_destroy();
+    header('Location:' . $_COOKIE['CURRENT_PAGE']);
+} else {
+    // save current page url to cookie for redirection during sign in or sign out.
+    setcookie('CURRENT_PAGE', $_SERVER['REQUEST_URI']);
+}
+?>
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Welcome to PicPolo</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- JQuery 1.12.0 -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+        <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.12.0.min.js"></script>
+
+        <!-- JQuery UI -->
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+        <!-- Custom JavaScript -->
+        <script src="js/search.js" type="text/javascript"></script>
+        <script src="js/carousel.js" type="text/javascript"></script>
+        
+        <!-- Custom CSS -->
+        <link type="text/css" href="css/1-col-portfolio.css" rel="stylesheet">
+        <link type="text/css" href="css/stylesheet.css" rel="stylesheet">
+        
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+    </head>
+    <body>
+
+        <!-- include header file -->
+        <?php include 'includes/header.php'; ?>
+
+        <!-- Page Content -->
+        <div class="container push-bottom" style="margin-top:-80px">
+            
+            <!-- Carousel -->
+            <div id="myCarousel" class="carousel slide" data-ride="carousel">
+            <div class="div">
+                <p style="font-size:35pt; margin-bottom: 0px; margin-top: -10px;padding-left: 5px;" > Explore PicPOLO</p>
+                <p style = "color: white; font-size: 14pt; vertical-align: text-top; padding-left: 5px;" > License and Sell Images Online</p>
+            </div>
+               <div class="carousel-inner">
+                    <div class="item active">
+                        <img src="assets/style/icons/photo1.jpg" class="img-responsive">         
+                        <div class="container">
+                            <div class="carousel-caption">
+                                <form id="searchForm" action="search.php" onsubmit="return validateForm()" method="GET">
+                                    <div class="form-group-lg">
+                                        <div class="input-group input-group-lg">
+                                            <input id="input-box" type="text" name="keyword"class="form-control" placeholder="Search Image by Title, Artist, or Description" autofocus>
+                                            <div class="input-group-btn">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+             </div>
+          
+             <!--<div id="search-box" class="jumbotron">
+                <form id="searchForm" class="col-sm-8 col-sm-offset-2" action="search.php" onsubmit="return validateForm()" method="GET">
+                    <div class="form-group-lg">
+                        <div class="input-group input-group-lg">
+                           
+                            <input id="input-box" type="text" name="keyword"class="form-control" placeholder="Search Image by Title, Artist, or Description" autofocus>
+                            <div class="input-group-btn">
+                                <button type="submit" class="btn btn-primary">
+                                    <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+             
+//backup
+            <!-- Page Heading -->
+            <!--
+            <div class="row push-top" style="margin-top:-30px">
+                <div class="col-sm-12 text-center"  >
+                    <div class="placeholder"style="">
+                        <div class="well" style="margin-bottom:-40px">
+                            <a href="#">
+                                <h4>Browse</h4>
+                                <img src="assets/style/icons/category.png" class="img-responsive" alt="Generic placeholder thumbnail"style="margin-top:-40px">
+                            </a>        
+                        </div>
+                    </div>
+                    <div class="col-sm-2 placeholder col-sm-offset-2" >
+                        <div class="well">
+                            <a href="artist.php?list=artist">
+                                <h4>Artist</h4>
+                                <img src="assets/style/icons/artist.png" class="img-responsive" alt="Generic placeholder thumbnail" style="margin-top:-40px">
+                                
+                            </a>
+                        </div>
+                    </div>
+                   
+                    <div class="col-sm-2  col-sm-offset-2 placeholder">
+                        <div class="well">
+                            <a href="#">
+                                <h4>New Arrival</h4>
+                                <img src="assets/style/icons/new-arrive.png" class="img-responsive" alt="Generic placeholder thumbnail"style="margin-top:-40px">
+                                
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+     </div>
+  -->
+  <div class="row push-top" style="margin-top:-30px">
+                <div class="container-fluid text-center">
+                    
+                    <div style="margin-left:1% ; width: 20%; display: inline-block">
+                        
+                        <div class="well">
+                            <a href="#">
+                                <h4>Browse</h4>
+                                <img src="assets/style/icons/category.png" class="img-responsive" alt="Generic placeholder thumbnail"style="margin-top:-40px">
+                            </a>        
+                        </div>
+                    </div>
+                    <div style="margin-left: 15%; width: 20%; display: inline-block">
+                        <div class="well">
+                            <a href="artist.php?list=artist">
+                                <h4>Artist</h4>
+                                <img src="assets/style/icons/artist.png" class="img-responsive" alt="Generic placeholder thumbnail" style="margin-top:-40px">
+                                
+                            </a>
+                        </div>
+                    </div>
+                   
+                    <div style="margin-left: 15%; width: 20%; display: inline-block">
+                        <div class="well">
+                            <a href="#">
+                                <h4>New Arrival</h4>
+                                <img src="assets/style/icons/new-arrive.png" class="img-responsive" alt="Generic placeholder thumbnail"style="margin-top:-40px">
+                                
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>       
+        <!-- /.container -->
+
+
+        <!-- Footer -->
+        <?php include 'includes/footer.php'; ?>
+
+    </body>
+
+</html>

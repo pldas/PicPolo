@@ -1,0 +1,88 @@
+/**
+ *   Dialog boxes for Buying.
+ */
+
+$(document).ready()
+{
+    $(document).on('keyup', function (evt) {
+        if (evt.keyCode == 27) {
+            $(".modal").modal('hide');
+            $('.modal-backdrop').remove();
+        }
+    });
+
+    $('[data-toggle="tooltip"]').tooltip();
+
+  //  $("#buy-dialog-guest").dialog({autoOpen: false, modal: true, resizable: false});
+    // Button click event listener
+    $("#checkout-btn").click(function () {
+        $("#buy-dialog-guest").modal('show');
+    });
+    $(".close-btn").click(function () {
+        $("#buy-dialog-guest").modal('hide');
+    });
+
+    // Button click event listener
+  //  $("#buy-dialog-user").dialog({autoOpen: false, modal: true, resizable: false});
+
+    $("#register-btn").click(function () {
+        $("#sign-up-modal").modal('show');
+    });
+
+    if (signedIn)
+    {
+        $(".buy-btn").click(function () {
+            $("#buy-dialog-user").modal('show');
+        });
+    }
+    else
+    {
+        $(".buy-btn").click(function () {
+            $("#buy-dialog-guest").modal('show');
+        });
+    }
+
+    $(".close-btn").click(function () {
+        $(".modal").modal('hide');
+    });
+
+    $("#sign-in-click").click(function () {
+        $("#buy-dialog-guest").modal('hide');
+        $("#sign-in-modal").modal('show');
+    });
+
+
+
+    function quickBuy(ImageID, ImageName) {
+        $.ajax({
+            type: 'POST',
+            url: 'quickBuy.php',
+            data: {'currentImageID': ImageID},
+            success: function (html) {
+                $("#quick-buy-modal").html(html);
+                $("#quick-buy-item").html(ImageName);
+                $("#quick-buy-modal").modal('show');
+            }
+        });
+    }
+
+    function uncheck(lic, priceSize) {
+
+        $("#selected-license span").html(priceSize);
+
+        if (lic === "standard") {
+            var radios = document.getElementsByName('extended');
+            for (var i = 0; i < radios.length; i++) {
+                if (radios[i].checked)
+                    radios[i].checked = false;
+            }
+
+        } else if (lic === "extended") {
+            var radios = document.getElementsByName('standard');
+            for (var i = 0; i < radios.length; i++) {
+                if (radios[i].checked)
+                    radios[i].checked = false;
+            }
+        }
+    }
+}

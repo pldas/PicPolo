@@ -1,0 +1,122 @@
+<?php
+ob_start();
+if (session_id() === '') {
+    session_start();
+}
+$_SESSION['ACTIVE_PAGE'] = "login";
+if (isset($_GET['next_page'])) {
+    setcookie('NEXT_PAGE', filter_input(INPUT_GET, 'next_page'));
+    setcookie('CURRENT_PAGE', filter_input(INPUT_GET, 'next_page'));
+}
+if (isset($_SESSION['username'])) {
+    header("Location: " . $_COOKIE['NEXT_PAGE']);
+}
+?>
+
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Account </title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- Custom JavaScript -->
+        <script src="js/search.js" type="text/javascript"></script>
+
+        <!-- JQuery 1.12.0 -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+        <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.12.0.min.js"></script>
+
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+        <!-- Custom CSS -->
+        <link type="text/css" href="css/1-col-portfolio.css" rel="stylesheet">
+        <link type="text/css" href="css/stylesheet.css" rel="stylesheet">
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+    </head>
+    <body>
+        <!-- Header -->
+        <?php include 'includes/header.php'; ?>
+        <!-- /Header -->
+
+        <div class="container push-bottom">
+            <div class="col-sm-6 col-sm-offset-3s col-md-6 col-md-offset-3">
+                <div class="jumbotron well">
+                    <h4 style="color:black">
+                        Already have an Account?
+                    </h4>
+                    <hr>
+                    <form action="login.php" method="post" enctype="multipart/form-data" >
+                        <div class="form-group">
+                            <input placeholder="Username" type="text" class="form-control" id="userid" name="user" required />
+                        </div>
+                        <div class="form-group">
+                            <input placeholder="Password" type="password" class="form-control" id="psw" name="pass" required />
+                        </div>
+                        <div class="form-group text-right">
+                            <input type="submit" class="btn btn-primary" name="login" value="Sign In" />
+                        </div>
+                    </form>
+                    <?php
+                    /*
+                     * checks user login information and if correct, leads user to member-area
+                     */
+
+                    // include 'db/dbHandler.php';
+                    include 'authorization.php';
+                    if (isset($_POST["login"])) {
+                        $username = $_POST["user"];
+                        $password = $_POST["pass"];
+
+                        $dbsearch = new dbHandler();
+                        $auth = new authentication();
+                        $user = $dbsearch->findUser($username);
+                        $correct = $dbsearch->findLogin($username, $password);
+                        $exist = /* $auth->checkExistingUser($user); */ $user;
+
+                        if ($auth->checkLogin($exist, $correct) === true) {
+                            $auth->createSession($username);
+                            $_SESSION['artistId'] = $dbsearch->getArtistId($username);
+                            header("Location: profile.php");
+                            exit();
+                        }
+                    }
+                    ?>
+                </div>
+                <hr>
+                <div class="jumbotron well">
+                    <h4>
+                        New to PicPolo?
+                    </h4>
+                    <br>
+                    <div class="container-fluid text-center">
+                        <a href="register.php?next_page=sell.php"><div class="btn btn-success">Create your PicPolo Account</div></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <?php include 'includes/footer.php'; ?>
+        <!-- /Footer -->
+
+    </body>
+</html>

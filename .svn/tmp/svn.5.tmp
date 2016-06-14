@@ -1,0 +1,64 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : May 9, 2016, 1:43:49 PM
+    Author     : poulomidas
+
+
+body {
+  margin: 0;
+  padding: 15px 30px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1em;
+  line-height: 1.4;
+  background: #222;
+  color: #fff;
+}
+h1 {
+  font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, sans-serif;
+}
+*/
+
+#gallery div a img {
+    margin: 20px;
+    width: 200px !important;
+    height: 200px !important;
+    border: 0;
+    /*vertical-align: middle;
+    /*
+    width:auto;
+    */
+    box-shadow:0px 0px 20px #cecece;
+    
+    -moz-transform: scale(0.7);
+    -moz-transition-duration: 0.6s; 
+    -webkit-transition-duration: 0.6s;
+    -webkit-transform: scale(0.7);
+ 
+    -ms-transform: scale(0.7);
+    -ms-transition-duration: 0.6s; 
+}
+#gallery div a img:hover
+{
+  box-shadow: 20px 20px 20px #dcdcdc;
+ -moz-transform: scale(0.8);
+ -moz-transition-duration: 0.6s;
+ -webkit-transition-duration: 0.6s;
+ -webkit-transform: scale(0.8);
+ 
+ -ms-transform: scale(0.8);
+ -ms-transition-duration: 0.6s;
+ 
+}
+
+div.desc {
+    margin: 40px ;
+    text-align: center;
+    vertical-align: middle ;
+    height: 40px !important;
+    width: 40px !important;
+     padding: 15px;
+}

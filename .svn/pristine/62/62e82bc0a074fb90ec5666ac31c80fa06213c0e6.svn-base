@@ -1,0 +1,230 @@
+<?php
+
+//start php session to store information
+if (session_id() === '')
+    session_start();
+
+// session variable to track current page
+$_SESSION['ACTIVE_PAGE'] = "manage_inventory";
+
+if(isset($_SESSION['username']))
+    $current_user = $_SESSION['username'];
+
+
+// signout
+if (isset($_SESSION['username']) && isset($_GET['signout'])) {
+    // remove all session variables
+    session_unset();
+
+    // destroy the session
+    session_destroy();
+
+    // redirect to home page
+    header('Location: http://sfsuswe.com/~s16g02');
+}
+?>
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Profile</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <!-- Header -->
+        <?php
+            include 'includes/header.php';
+            $artistImage = new dbHandler();
+            $userId = $usr_profile->getArtistId($_SESSION['username']);
+        ?>
+
+        <!-- Body Contents -->
+
+        <div class="container push-bottom">
+            <div class="row">
+                <h2 style="margin-top: -80px">Manage Portfolio</h2>
+                <?php include 'includes/accountTabs.php'; ?>
+                <div class="container">
+                    <div class="resized_images">
+                        <?php
+                            $images = json_decode($artistImage->getArtistItemsList($userId), TRUE);
+                            if (isset($images)) {
+                                foreach (array_slice($images, 1) as $image) {
+                                    echo '<div class="col-md-4">'
+                                    . '<h3>'.$image["imageTitle"].'</h3>'
+                                    . '<img src="assets/images/' . $image["imageId"] . '-' . $image["imageSize"][0]['sizeId'] . '.' . $image["imageType"] . '" alt="" class="img-responsive" width="300" height="200">'
+                                    . '<a href="#" data-toggle="modal" data-target="#deleteImage" data-backdrop="static" data-keyboard="false"><span class="glyphicon glyphicon-remove"></span> Delete | </a>'
+                                    . '<a href="#" data-toggle="modal" data-target="#editImage" data-backdrop="static" data-keyboard="false"><span class="glyphicon glyphicon-pencil"></span> Edit</a>'
+                                    . '</div>';
+                                }
+                            } else {
+                                echo '<h4>You do not have any Uploaded Artwork!</h4>';
+                            }
+                        ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <?php include 'includes/footer.php'; ?>
+
+    </body>
+
+    <!--Edit image-->
+    <div id="editImage" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-content-block">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title" style="color:black">Editing cat.jpg</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form action="manage_inventory.php" method="POST" enctype="multipart/form-data" id="formAnchor">
+                            <div class="col-lg-12 push-bottom-sm">
+                                <div class="row">
+                                    <fieldset>
+                                        <legend>Edit file information</legend>
+                                        <div class="form-group">
+                                            <label for="fileTitle" required>Title</label>
+                                            <input required type="text" id="fileTitle" class="form-control" name="uploadData[fileTitle]"
+                                            maxlength="30" placeholder="A Creative Caption." pattern="[a-zA-Z0-9-\s]+" oninvalid="setCustomValidity('Letters, numbers, and white space only.')" onchange="try {
+                                                setCustomValidity('')} catch (e) {}">
+                                            <br>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fileTags">Category</label>
+                                            <select id='fileTags' name="uploadData[categoryId]" class="form-control">
+                                                <option selected disabled>Select a PicPolo's Category (Or Select Other to add your own category tag)</option>
+                                                <?php
+                                                $recordNewImage = new dbHandler();
+                                                $categoryList = $recordNewImage->getCategory(NULL);
+                                                foreach ($categoryList as $categories) {
+                                                    echo "<option value='" . $categories['catId'] . "' >" . $categories['name'] . "</option>";
+                                                }
+                                                ?>
+                                                <option value="other">Other</option>
+                                            </select>
+                                            <div id="otherCategory">
+                                                <label>Add your own category</label>
+                                                <input type="text" id="otherTags" name="uploadData[userCategoryId]" class="form-control" maxlength="120" placeholder="fun, party, sports"
+                                                pattern="[a-zA-Z0-9-\s]+" oninvalid="setCustomValidity('Letters, numbers, and white space only.')" onchange="try {
+                                                setCustomValidity('')} catch (e) {}">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fileDescription">Description</label>
+                                            <textarea style="resize: none" class="form-control" rows="3" cols="2" maxlength="200" name="uploadData[fileDescription]" id="fileDescription" placeholder="Describe your Masterpiece!"></textarea>
+                                            <div id="fileDescriptionCount"></div>
+                                        </div>
+                                        <br>
+                                    </fieldset>
+                                </div>
+                                <div class="row">
+                                    <fieldset>
+                                        <legend>Edit prices per license type</legend>
+                                        <div class="col-md-6">
+                                            <div class="text-center"><label>Standard License</label></div>
+                                            <div class="row"><div class="col-md-11"></div></div>
+                                            <div class="row">
+                                                <div class="col-md-11">
+                                                    <label class="col-md-3">Small</label>
+                                                    <div class="col-md-9">
+                                                        <input type="number" name="price[0]" class="form-control" id="filePrice" min="0.00" step="0.01" max="999" value="1.99">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-11">
+                                                    <label class="col-md-3">Medium</label>
+                                                    <div class="col-md-9">
+                                                        <input type="number" name="price[1]" class="form-control" id="filePrice" min="0.00" step="0.01" max="999" value="1.99">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-11">
+                                                    <label class="col-md-3">Large</label>
+                                                    <div class="col-md-9">
+                                                        <input type="number" name="price[2]" class="form-control" id="filePrice" min="0.00" step="0.01" max="999" value="1.99">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="text-center"><label>Extended License</label></div>
+                                            <div class="row"><div class="col-md-11"></div></div>
+                                            <div class="row">
+                                                <div class="col-md-11">
+                                                    <label class="col-md-3">Small</label>
+                                                    <div class="col-md-9">
+                                                        <input type="number" name="price[3]" class="form-control" id="filePrice" min="0.00" step="0.01" max="999" value="2.99">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-11">
+                                                    <label class="col-md-3">Medium</label>
+                                                    <div class="col-md-9">
+                                                        <input type="number" name="price[4]" class="form-control" id="filePrice" min="0.00" step="0.01" max="999" value="2.99">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-11">
+                                                    <label class="col-md-3">Large</label>
+                                                    <div class="col-md-9">
+                                                        <input type="number" name="price[5]" class="form-control" id="filePrice" min="0.00" step="0.01" max="999" value="2.99">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </div>
+                            <div class="form-group text-right">
+                                <input type="button" class="btn btn-warning" style="float:left"  data-dismiss="modal" value="Cancel" >
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <input type="submit" class="btn btn-primary" name ="imageSubmit" value="Update Artwork" />
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--End of edit image-->
+
+    <!--Delete image-->
+    <div id="deleteImage" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-content-block">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title" style="color:black">Are you sure?</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p style="color:black">You cannot undo this action.</p>
+                        <form action="manage_inventory.php" method="POST" enctype="multipart/form-data" id="formAnchor">
+                            <div class="form-group">
+                                <input type="button" class="btn btn-warning" data-dismiss="modal" style="float:left" value="Cancel" >
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id="delete-btn" type="button" class="btn btn-danger" data-dismiss="modal" value="Delete">
+                                <!-- <input type="submit" class="btn btn-primary" name="login" style="float:right" value="Log In" /> -->
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--End of delete image-->
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title></title>
+    </head>
+    <body>
+        <div id="detailmodal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-content-block">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title"></h4>
+                        </div>
+                        <div class="modal-body">
+                            <!-- put your text here -->
+                            <?php ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Footer -->
+        <footer>
+                <!-- Buy Dialog Boxes -->
+                <div id="buy-dialog-guest" title="Guest Checkout" style="display:none">
+                    <p>Thank you for your interest!</p>   
+                    <p align="left">Please call 1-800-PIC-POLO in order
+                    to complete your purchase.</p>
+                    <button class="close-btn btn btn-primary btn-block" type="button">Close</button>
+                </div>
+
+                <div id="buy-dialog-user" title="Buy Now" style="display:none">
+                    <p>Thank you for your purchase.</p>   
+                    <p>The photo has been added to your account.</p>
+                    <button class="close-btn btn btn-primary btn-block" type="button">Close</button>
+                </div>
+
+                <!-- Register Dialog Boxes -->
+                <div id="register-success" title="Registered!" style="display:none">
+                    <p>Welcome to PicPOLO.</p>
+                    <p>Thank you for registering!</p>
+                    <button class="close-btn btn btn-primary btn-block" type="button">Close</button>
+                </div>
+                <div id="register-failure" title="Registering Error!" style="display:none">
+                    <p>That username has already been taken.</p>
+                    <p>Please try another.</p>
+                <button class="close-btn btn btn-primary btn-block" type="button">Close</button>
+                </div>
+            
+            <script src="js/buyDialogBoxes.js"></script>
+<hr>
+            <div class="row">
+                <div class="col-lg-12 text-center" style="display:inline-block">
+                    <p class="copyright">Copyright &copy; PicPOLO</p><a id="terms" href="termsAndConditions.php">Conditions of Use</a>&nbsp;&nbsp;<a id="terms" href="privacyPolicy.php">Privacy Notice</a>
+                </div>
+            </div>
+            <!-- /.row -->
+        </footer>
+        <!-- /Footer -->
+    </body>
+</html>
